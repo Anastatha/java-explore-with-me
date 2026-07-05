@@ -20,7 +20,6 @@ import ru.practicum.explorewithme.ewmmain.model.EventState;
 import ru.practicum.explorewithme.ewmmain.model.Location;
 import ru.practicum.explorewithme.ewmmain.model.RequestStatus;
 import ru.practicum.explorewithme.ewmmain.model.User;
-import ru.practicum.explorewithme.ewmmain.model.UserAction;
 import ru.practicum.explorewithme.ewmmain.repository.CategoryRepository;
 import ru.practicum.explorewithme.ewmmain.repository.EventRepository;
 import ru.practicum.explorewithme.ewmmain.repository.ParticipationRequestRepository;
@@ -28,7 +27,6 @@ import ru.practicum.explorewithme.ewmmain.repository.UserRepository;
 import ru.practicum.explorewithme.ewmmain.util.EventValidator;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
