@@ -58,13 +58,13 @@ public class ParticipationRequestService {
         RequestStatus status = event.getRequestModeration() && event.getParticipantLimit() != 0 ? RequestStatus.PENDING : RequestStatus.CONFIRMED;
         ParticipationRequest participationRequest = new ParticipationRequest(LocalDateTime.now(), event, user, status);
         ParticipationRequest saved = requestRepository.save(participationRequest);
-        return toDto(saved);
+        return ParticipationRequestMapper.toDto(saved);
     }
 
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
         findUser(userId);
         return requestRepository.findByRequesterId(userId).stream()
-                .map(this::toDto)
+                .map(ParticipationRequestMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -75,7 +75,7 @@ public class ParticipationRequestService {
             throw new NotFoundException(String.format("Request with id=%d was not found", requestId));
         }
         request.setStatus(RequestStatus.CANCELED);
-        return toDto(requestRepository.save(request));
+        return ParticipationRequestMapper.toDto(requestRepository.save(request));
     }
 
     public List<ParticipationRequestDto> getRequestsForEvent(Long userId, Long eventId) {
@@ -85,7 +85,7 @@ public class ParticipationRequestService {
             throw new NotFoundException(String.format("Event with id=%d was not found", eventId));
         }
         return requestRepository.findByEventId(eventId).stream()
-                .map(this::toDto)
+                .map(ParticipationRequestMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -122,20 +122,20 @@ public class ParticipationRequestService {
             }
             for (ParticipationRequest participationRequest : requests) {
                 participationRequest.setStatus(RequestStatus.CONFIRMED);
-                confirmed.add(toDto(requestRepository.save(participationRequest)));
+                confirmed.add(ParticipationRequestMapper.toDto(requestRepository.save(participationRequest)));
             }
             confirmedCount += confirmed.size();
             if (event.getParticipantLimit() != 0 && confirmedCount >= event.getParticipantLimit()) {
                 List<ParticipationRequest> pending = requestRepository.findByEventIdAndStatus(eventId, RequestStatus.PENDING);
                 for (ParticipationRequest pendingRequest : pending) {
                     pendingRequest.setStatus(RequestStatus.REJECTED);
-                    rejected.add(toDto(requestRepository.save(pendingRequest)));
+                    rejected.add(ParticipationRequestMapper.toDto(requestRepository.save(pendingRequest)));
                 }
             }
         } else if (desiredStatus == RequestStatus.REJECTED) {
             for (ParticipationRequest participationRequest : requests) {
                 participationRequest.setStatus(RequestStatus.REJECTED);
-                rejected.add(toDto(requestRepository.save(participationRequest)));
+                rejected.add(ParticipationRequestMapper.toDto(requestRepository.save(participationRequest)));
             }
         } else {
             throw new ConflictException("Only CONFIRMED or REJECTED request status changes are supported");
@@ -148,7 +148,4 @@ public class ParticipationRequestService {
                 .orElseThrow(() -> new NotFoundException(String.format("User with id=%d was not found", userId)));
     }
 
-    private ParticipationRequestDto toDto(ParticipationRequest request) {
-        return ParticipationRequestMapper.toDto(request);
-    }
 }

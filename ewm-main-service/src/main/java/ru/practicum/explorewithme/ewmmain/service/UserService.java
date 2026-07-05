@@ -8,6 +8,7 @@ import ru.practicum.explorewithme.ewmmain.exception.NotFoundException;
 import ru.practicum.explorewithme.ewmmain.mapper.UserMapper;
 import ru.practicum.explorewithme.ewmmain.model.User;
 import ru.practicum.explorewithme.ewmmain.repository.UserRepository;
+import ru.practicum.explorewithme.ewmmain.util.EventValidator;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,9 +16,12 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final EventValidator eventValidator;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,
+                       EventValidator eventValidator) {
         this.userRepository = userRepository;
+        this.eventValidator = eventValidator;
     }
 
     public UserDto createUser(NewUserRequest request) {
@@ -26,23 +30,18 @@ public class UserService {
         });
         User user = new User(request.getEmail(), request.getName());
         User saved = userRepository.save(user);
-        return toDto(saved);
+        return UserMapper.toDto(saved);
     }
 
     public List<UserDto> getUsers(List<Long> ids, int from, int size) {
-        if (from < 0) {
-            throw new IllegalArgumentException("from must be greater than or equal to 0");
-        }
-        if (size <= 0) {
-            throw new IllegalArgumentException("size must be greater than 0");
-        }
+        eventValidator.validatePaging(from, size);
         List<User> users = ids == null || ids.isEmpty()
                 ? userRepository.findAll()
                 : userRepository.findAllById(ids);
         return users.stream()
                 .skip(from)
                 .limit(size)
-                .map(this::toDto)
+                .map(UserMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -53,7 +52,4 @@ public class UserService {
         userRepository.deleteById(userId);
     }
 
-    private UserDto toDto(User user) {
-        return UserMapper.toDto(user);
-    }
 }
