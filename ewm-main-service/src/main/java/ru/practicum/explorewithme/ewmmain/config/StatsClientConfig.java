@@ -8,6 +8,6 @@ import ru.practicum.explorewithme.ewmmain.client.StatsClient;
 public class StatsClientConfig {
     @Bean
     public StatsClient statsClient() {
-        return new StatsClient("http://localhost:9090");
+        return new StatsClient("http://stats-server:9090");
     }
 }
