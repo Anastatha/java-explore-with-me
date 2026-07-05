@@ -26,6 +26,7 @@ import ru.practicum.explorewithme.ewmmain.repository.EventRepository;
 import ru.practicum.explorewithme.ewmmain.repository.ParticipationRequestRepository;
 import ru.practicum.explorewithme.ewmmain.repository.UserRepository;
 import ru.practicum.explorewithme.ewmmain.dto.stats.ViewStats;
+import ru.practicum.explorewithme.ewmmain.util.EventValidator;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -47,17 +48,20 @@ public class EventService {
     private final CategoryRepository categoryRepository;
     private final ParticipationRequestRepository requestRepository;
     private final StatsClient statsClient;
+    private final EventValidator eventValidator;
 
     public EventService(EventRepository eventRepository,
                         UserRepository userRepository,
                         CategoryRepository categoryRepository,
                         ParticipationRequestRepository requestRepository,
-                        StatsClient statsClient) {
+                        StatsClient statsClient,
+                        EventValidator eventValidator) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.requestRepository = requestRepository;
         this.statsClient = statsClient;
+        this.eventValidator = eventValidator;
     }
 
     public List<EventFullDto> getEventsForAdmin(List<Long> users,
@@ -67,11 +71,11 @@ public class EventService {
                                                 String rangeEnd,
                                                 int from,
                                                 int size) {
-        validatePaging(from, size);
+        eventValidator.validatePaging(from, size);
         List<EventState> stateFilters = parseStates(states);
         LocalDateTime start = parseDate(rangeStart);
         LocalDateTime end = parseDate(rangeEnd);
-        validateDateRange(start, end);
+        eventValidator.validateDateRange(start, end);
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
         List<Event> events = eventRepository.searchAdminEvents(
                 emptyToNull(users),
@@ -152,11 +156,11 @@ public class EventService {
                                                String sort,
                                                int from,
                                                int size) {
-        validatePaging(from, size);
-        validateSort(sort);
+        eventValidator.validatePaging(from, size);
+        eventValidator.validateSort(sort);
         LocalDateTime start = parseDate(rangeStart);
         LocalDateTime end = parseDate(rangeEnd);
-        validateDateRange(start, end);
+        eventValidator.validateDateRange(start, end);
         if (start == null && end == null) {
             start = LocalDateTime.now();
         }
@@ -187,7 +191,7 @@ public class EventService {
     }
 
     public List<EventShortDto> getUserEvents(Long userId, int from, int size) {
-        validatePaging(from, size);
+        eventValidator.validatePaging(from, size);
         User user = findUser(userId);
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
         return eventRepository.findByInitiatorId(user.getId(), pageable).stream()
@@ -384,30 +388,6 @@ public class EventService {
             }
         }
         return eventStates.isEmpty() ? null : eventStates;
-    }
-
-    private void validateSort(String sort) {
-        if (sort == null) {
-            return;
-        }
-        if (!"EVENT_DATE".equals(sort) && !"VIEWS".equals(sort)) {
-            throw new IllegalArgumentException("Unsupported sort: " + sort);
-        }
-    }
-
-    private void validatePaging(int from, int size) {
-        if (from < 0) {
-            throw new IllegalArgumentException("from must be greater than or equal to 0");
-        }
-        if (size <= 0) {
-            throw new IllegalArgumentException("size must be greater than 0");
-        }
-    }
-
-    private void validateDateRange(LocalDateTime start, LocalDateTime end) {
-        if (start != null && end != null && start.isAfter(end)) {
-            throw new IllegalArgumentException("rangeStart must be earlier than or equal to rangeEnd");
-        }
     }
 
     private <T> List<T> emptyToNull(List<T> values) {

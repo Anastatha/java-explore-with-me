@@ -13,6 +13,7 @@ import ru.practicum.explorewithme.ewmmain.repository.EventRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.springframework.data.domain.PageRequest;
 import ru.practicum.explorewithme.ewmmain.mapper.CompilationMapper;
 
@@ -38,7 +39,7 @@ public class CompilationService {
     public CompilationDto getCompilation(Long compId) {
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException(String.format("Compilation with id=%d was not found", compId)));
-        return toDto(compilation);
+        return CompilationMapper.toDto(compilation);
     }
 
     public CompilationDto saveCompilation(NewCompilationDto request) {
@@ -47,7 +48,7 @@ public class CompilationService {
             List<Event> events = eventRepository.findAllById(request.getEvents());
             compilation.setEvents(new HashSet<>(events));
         }
-        return toDto(compilationRepository.save(compilation));
+        return CompilationMapper.toDto(compilationRepository.save(compilation));
     }
 
     public void deleteCompilation(Long compId) {
@@ -69,10 +70,6 @@ public class CompilationService {
         if (request.getEvents() != null) {
             compilation.setEvents(new HashSet<>(eventRepository.findAllById(request.getEvents())));
         }
-        return toDto(compilationRepository.save(compilation));
-    }
-
-    private CompilationDto toDto(Compilation compilation) {
-        return CompilationMapper.toDto(compilation);
+        return CompilationMapper.toDto(compilationRepository.save(compilation));
     }
 }

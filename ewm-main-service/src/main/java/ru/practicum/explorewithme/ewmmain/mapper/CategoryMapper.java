@@ -15,8 +15,4 @@ public final class CategoryMapper {
     public static Category toEntity(NewCategoryDto request) {
         return request == null ? null : new Category(request.getName());
     }
-
-    public static Category toEntity(CategoryDto dto) {
-        return dto == null ? null : new Category(dto.getName());
-    }
 }
