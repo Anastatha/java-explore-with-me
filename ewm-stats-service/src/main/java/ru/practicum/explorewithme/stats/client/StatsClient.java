@@ -3,6 +3,7 @@ package ru.practicum.explorewithme.stats.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.practicum.explorewithme.stats.dto.EndpointHit;
 import ru.practicum.explorewithme.stats.dto.ViewStats;
+import ru.practicum.explorewithme.stats.util.DateTimeUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,7 +21,6 @@ public class StatsClient {
     private final HttpClient client;
     private final ObjectMapper mapper;
     private final String baseUrl;
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public StatsClient(String baseUrl) {
         this.client = HttpClient.newHttpClient();
@@ -40,8 +40,8 @@ public class StatsClient {
     }
 
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) throws IOException, InterruptedException {
-        String url = baseUrl + "/stats?start=" + encode(start.format(FORMATTER)) +
-                "&end=" + encode(end.format(FORMATTER)) +
+        String url = baseUrl + "/stats?start=" + encode(start.format(DateTimeUtils.FORMATTER)) +
+                "&end=" + encode(end.format(DateTimeUtils.FORMATTER)) +
                 "&unique=" + unique;
         if (uris != null && !uris.isEmpty()) {
             for (String uri : uris) {
