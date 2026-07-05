@@ -156,6 +156,7 @@ public class EventService {
         validateSort(sort);
         LocalDateTime start = parseDate(rangeStart);
         LocalDateTime end = parseDate(rangeEnd);
+        validateDateRange(start, end);
         if (start == null && end == null) {
             start = LocalDateTime.now();
         }
@@ -352,7 +353,7 @@ public class EventService {
                 .map(this::getEventUri)
                 .collect(Collectors.toList());
         try {
-            List<ViewStats> stats = statsClient.getStats(LocalDateTime.now().minusYears(5), LocalDateTime.now().plusYears(5), uris, false);
+            List<ViewStats> stats = statsClient.getStats(LocalDateTime.now().minusYears(5), LocalDateTime.now().plusYears(5), uris, true);
             return stats.stream().collect(Collectors.toMap(ViewStats::getUri, ViewStats::getHits, Long::sum));
         } catch (RuntimeException ex) {
             return new HashMap<>();
