@@ -71,6 +71,7 @@ public class EventService {
         List<EventState> stateFilters = parseStates(states);
         LocalDateTime start = parseDate(rangeStart);
         LocalDateTime end = parseDate(rangeEnd);
+        validateDateRange(start, end);
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
         List<Event> events = eventRepository.searchAdminEvents(
                 emptyToNull(users),
@@ -116,7 +117,7 @@ public class EventService {
         if (request.getEventDate() != null) {
             LocalDateTime eventDate = parseDate(request.getEventDate());
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new ConflictException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
+                throw new IllegalArgumentException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
             }
             if (event.getPublishedOn() != null && eventDate.isBefore(event.getPublishedOn().plusHours(1))) {
                 throw new ConflictException("The event date must be at least one hour after publication time");
@@ -208,7 +209,7 @@ public class EventService {
         User user = findUser(userId);
         LocalDateTime eventDate = parseDate(request.getEventDate());
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ConflictException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
+            throw new IllegalArgumentException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
         }
         Event event = new Event();
         event.setAnnotation(request.getAnnotation());
@@ -263,7 +264,7 @@ public class EventService {
         if (request.getEventDate() != null) {
             LocalDateTime eventDate = parseDate(request.getEventDate());
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new ConflictException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
+                throw new IllegalArgumentException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
             }
             event.setEventDate(eventDate);
         }
@@ -399,6 +400,12 @@ public class EventService {
         }
         if (size <= 0) {
             throw new IllegalArgumentException("size must be greater than 0");
+        }
+    }
+
+    private void validateDateRange(LocalDateTime start, LocalDateTime end) {
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new IllegalArgumentException("rangeStart must be earlier than or equal to rangeEnd");
         }
     }
 

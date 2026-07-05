@@ -63,7 +63,12 @@ public class StatsClient {
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            return Arrays.asList(objectMapper.readValue(response.body(), ViewStats[].class));
+            List<ViewStats> remoteStats = Arrays.asList(objectMapper.readValue(response.body(), ViewStats[].class));
+            if (!remoteStats.isEmpty()) {
+                return remoteStats;
+            }
+            List<ViewStats> localStats = getLocalStats(start, end, uris, unique);
+            return localStats.isEmpty() ? remoteStats : localStats;
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
