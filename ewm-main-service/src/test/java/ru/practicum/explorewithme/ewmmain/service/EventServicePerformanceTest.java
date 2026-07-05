@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.explorewithme.ewmmain.client.StatsClient;
+import ru.practicum.explorewithme.ewmmain.dto.EventShortDto;
 import ru.practicum.explorewithme.ewmmain.model.Event;
 import ru.practicum.explorewithme.ewmmain.model.EventState;
 import ru.practicum.explorewithme.ewmmain.model.RequestStatus;
@@ -17,6 +18,7 @@ import ru.practicum.explorewithme.ewmmain.util.EventValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +48,9 @@ class EventServicePerformanceTest {
     @Mock
     private EventValidator eventValidator;
 
+    @Mock
+    private EventServiceSupport support;
+
     @InjectMocks
     private EventService eventService;
 
@@ -58,24 +63,17 @@ class EventServicePerformanceTest {
         event.setCreatedOn(LocalDateTime.now());
         event.setEventDate(LocalDateTime.now().plusDays(1));
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(new ru.practicum.explorewithme.ewmmain.model.User("u@example.com", "u")));
-        doNothing().when(eventValidator).validatePaging(any(Integer.class), any(Integer.class));
-        when(eventRepository.findByInitiatorId(any(), any())).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(event)));
-        when(requestRepository.countByEventIdsAndStatus(anyList(), any(RequestStatus.class)))
-                .thenReturn(List.of(new ParticipationRequestRepository.ParticipationRequestCount() {
-                    @Override
-                    public Long getEventId() {
-                        return 1L;
-                    }
+        ru.practicum.explorewithme.ewmmain.model.User user = new ru.practicum.explorewithme.ewmmain.model.User("u@example.com", "u");
 
-                    @Override
-                    public Long getCount() {
-                        return 3L;
-                    }
-                }));
+        doNothing().when(eventValidator).validatePaging(any(Integer.class), any(Integer.class));
+        when(support.findUser(1L)).thenReturn(user);
+        when(eventRepository.findByInitiatorId(any(), any())).thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(event)));
+        when(support.getConfirmedRequests(anyList())).thenReturn(Map.of(1L, 3L));
+        when(support.toEventShortDto(any(Event.class), any(Long.class), any(Long.class)))
+                .thenReturn(new EventShortDto());
 
         eventService.getUserEvents(1L, 0, 10);
 
-        verify(requestRepository).countByEventIdsAndStatus(anyList(), any(RequestStatus.class));
+        verify(support).getConfirmedRequests(anyList());
     }
 }
