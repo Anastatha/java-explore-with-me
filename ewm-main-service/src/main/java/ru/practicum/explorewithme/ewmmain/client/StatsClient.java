@@ -1,9 +1,6 @@
 package ru.practicum.explorewithme.ewmmain.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import ru.practicum.explorewithme.ewmmain.dto.stats.EndpointHit;
 import ru.practicum.explorewithme.ewmmain.dto.stats.ViewStats;
 
 import java.io.IOException;
@@ -15,8 +12,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class StatsClient {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -27,14 +26,17 @@ public class StatsClient {
     public StatsClient(String baseUrl) {
         this.client = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         this.baseUrl = baseUrl;
     }
 
-    public void sendHit(EndpointHit hit) {
+    public void sendHit(ru.practicum.explorewithme.ewmmain.dto.stats.EndpointHit hit) {
         try {
-            String body = objectMapper.writeValueAsString(hit);
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("app", hit.getApp());
+            bodyMap.put("uri", hit.getUri());
+            bodyMap.put("ip", hit.getIp());
+            bodyMap.put("timestamp", hit.getTimestamp() == null ? null : hit.getTimestamp().format(FORMATTER));
+            String body = objectMapper.writeValueAsString(bodyMap);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + "/hit"))
                     .header("Content-Type", "application/json")
