@@ -9,7 +9,6 @@ import ru.practicum.explorewithme.ewmmain.client.StatsClient;
 import ru.practicum.explorewithme.ewmmain.dto.EventShortDto;
 import ru.practicum.explorewithme.ewmmain.model.Event;
 import ru.practicum.explorewithme.ewmmain.model.EventState;
-import ru.practicum.explorewithme.ewmmain.model.RequestStatus;
 import ru.practicum.explorewithme.ewmmain.repository.CategoryRepository;
 import ru.practicum.explorewithme.ewmmain.repository.EventRepository;
 import ru.practicum.explorewithme.ewmmain.repository.ParticipationRequestRepository;
@@ -19,7 +18,6 @@ import ru.practicum.explorewithme.ewmmain.util.EventValidator;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
