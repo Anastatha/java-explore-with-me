@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,8 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> cq = cb.createQuery(Event.class);
         Root<Event> event = cq.from(Event.class);
+        event.fetch("category", JoinType.INNER);
+        event.fetch("initiator", JoinType.INNER);
         List<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.equal(event.get("state"), state));
@@ -74,6 +77,8 @@ public class EventRepositoryImpl implements EventRepositoryCustom {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<Event> cq = cb.createQuery(Event.class);
         Root<Event> event = cq.from(Event.class);
+        event.fetch("category", JoinType.INNER);
+        event.fetch("initiator", JoinType.INNER);
         List<Predicate> predicates = new ArrayList<>();
 
         if (users != null && !users.isEmpty()) {
