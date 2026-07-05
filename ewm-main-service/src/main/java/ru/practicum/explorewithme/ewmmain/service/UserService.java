@@ -30,6 +30,12 @@ public class UserService {
     }
 
     public List<UserDto> getUsers(List<Long> ids, int from, int size) {
+        if (from < 0) {
+            throw new IllegalArgumentException("from must be greater than or equal to 0");
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("size must be greater than 0");
+        }
         List<User> users = ids == null || ids.isEmpty()
                 ? userRepository.findAll()
                 : userRepository.findAllById(ids);

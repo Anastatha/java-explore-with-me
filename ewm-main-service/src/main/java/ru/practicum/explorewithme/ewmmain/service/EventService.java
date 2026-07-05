@@ -30,6 +30,7 @@ import ru.practicum.explorewithme.ewmmain.dto.stats.ViewStats;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,6 +68,7 @@ public class EventService {
                                                 String rangeEnd,
                                                 int from,
                                                 int size) {
+        validatePaging(from, size);
         List<EventState> stateFilters = parseStates(states);
         LocalDateTime start = parseDate(rangeStart);
         LocalDateTime end = parseDate(rangeEnd);
@@ -114,6 +116,9 @@ public class EventService {
         }
         if (request.getEventDate() != null) {
             LocalDateTime eventDate = parseDate(request.getEventDate());
+            if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
+                throw new IllegalArgumentException("Event date must be at least two hours in the future");
+            }
             if (event.getPublishedOn() != null && eventDate.isBefore(event.getPublishedOn().plusHours(1))) {
                 throw new IllegalArgumentException("The event date must be at least one hour after publication time");
             }
@@ -131,6 +136,8 @@ public class EventService {
                     throw new ConflictException("Cannot reject the event because it is already published");
                 }
                 event.setState(EventState.CANCELED);
+            } else {
+                throw new IllegalArgumentException("Unsupported stateAction: " + request.getStateAction());
             }
         }
         return toEventFullDto(eventRepository.save(event), getEventViews(event));
@@ -145,6 +152,8 @@ public class EventService {
                                                String sort,
                                                int from,
                                                int size) {
+        validatePaging(from, size);
+        validateSort(sort);
         LocalDateTime start = parseDate(rangeStart);
         LocalDateTime end = parseDate(rangeEnd);
         if (start == null && end == null) {
@@ -178,6 +187,7 @@ public class EventService {
     }
 
     public List<EventShortDto> getUserEvents(Long userId, int from, int size) {
+        validatePaging(from, size);
         User user = findUser(userId);
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
         Page<Event> page = eventRepository.findByInitiatorId(user.getId(), pageable);
@@ -265,6 +275,8 @@ public class EventService {
                 event.setState(EventState.PENDING);
             } else if ("CANCEL_REVIEW".equals(request.getStateAction())) {
                 event.setState(EventState.CANCELED);
+            } else {
+                throw new IllegalArgumentException("Unsupported stateAction: " + request.getStateAction());
             }
         }
         return toEventFullDto(eventRepository.save(event), getEventViews(event));
@@ -286,8 +298,18 @@ public class EventService {
     }
 
     private boolean isAvailable(EventShortDto eventShortDto) {
-        // OnlyAvailable filtering is based on confirmedRequests and participant limit.
-        return eventShortDto.getConfirmedRequests() < eventShortDto.getViews() || true;
+        if (eventShortDto == null) {
+            return false;
+        }
+        Event event = eventRepository.findById(eventShortDto.getId()).orElse(null);
+        if (event == null) {
+            return false;
+        }
+        Integer participantLimit = event.getParticipantLimit();
+        if (participantLimit == null || participantLimit == 0) {
+            return true;
+        }
+        return eventShortDto.getConfirmedRequests() < participantLimit;
     }
 
     private String getEventUri(Event event) {
@@ -343,7 +365,11 @@ public class EventService {
         if (dateTime == null || dateTime.isBlank()) {
             return null;
         }
-        return LocalDateTime.parse(dateTime, FORMATTER);
+        try {
+            return LocalDateTime.parse(dateTime, FORMATTER);
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Invalid date-time format: " + dateTime);
+        }
     }
 
     private List<EventState> parseStates(List<String> states) {
@@ -354,10 +380,29 @@ public class EventService {
         for (String state : states) {
             try {
                 eventStates.add(EventState.valueOf(state));
-            } catch (IllegalArgumentException ignored) {
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Unsupported state: " + state);
             }
         }
         return eventStates.isEmpty() ? null : eventStates;
+    }
+
+    private void validateSort(String sort) {
+        if (sort == null) {
+            return;
+        }
+        if (!"EVENT_DATE".equals(sort) && !"VIEWS".equals(sort)) {
+            throw new IllegalArgumentException("Unsupported sort: " + sort);
+        }
+    }
+
+    private void validatePaging(int from, int size) {
+        if (from < 0) {
+            throw new IllegalArgumentException("from must be greater than or equal to 0");
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("size must be greater than 0");
+        }
     }
 
     private <T> List<T> emptyToNull(List<T> values) {

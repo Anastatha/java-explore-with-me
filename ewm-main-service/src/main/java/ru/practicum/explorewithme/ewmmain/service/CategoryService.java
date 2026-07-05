@@ -42,6 +42,12 @@ public class CategoryService {
     }
 
     public List<CategoryDto> getCategories(int from, int size) {
+        if (from < 0) {
+            throw new IllegalArgumentException("from must be greater than or equal to 0");
+        }
+        if (size <= 0) {
+            throw new IllegalArgumentException("size must be greater than 0");
+        }
         int page = from / Math.max(size, 1);
         return repository.findAll(PageRequest.of(page, size)).stream()
                 .map(CategoryMapper::toDto)
