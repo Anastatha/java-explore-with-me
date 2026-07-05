@@ -37,8 +37,8 @@ public class EventPublicController {
                                          @RequestParam(value = "from", defaultValue = "0") int from,
                                          @RequestParam(value = "size", defaultValue = "10") int size,
                                          HttpServletRequest request) {
-        List<EventShortDto> response = eventService.getPublicEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
         safeSendHit(request);
+        List<EventShortDto> response = eventService.getPublicEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
         return response;
     }
 

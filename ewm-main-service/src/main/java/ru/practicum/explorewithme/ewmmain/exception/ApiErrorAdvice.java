@@ -52,7 +52,7 @@ public class ApiErrorAdvice {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(ConflictException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "Incorrectly made request.", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "Conflict occurred.", ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

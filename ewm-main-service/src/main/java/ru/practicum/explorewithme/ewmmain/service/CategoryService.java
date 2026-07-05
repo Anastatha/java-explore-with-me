@@ -48,8 +48,9 @@ public class CategoryService {
         if (size <= 0) {
             throw new IllegalArgumentException("size must be greater than 0");
         }
-        int page = from / Math.max(size, 1);
-        return repository.findAll(PageRequest.of(page, size)).stream()
+        return repository.findAll(PageRequest.of(0, Math.max(from + size, 1))).stream()
+                .skip(from)
+                .limit(size)
                 .map(CategoryMapper::toDto)
                 .collect(Collectors.toList());
     }
