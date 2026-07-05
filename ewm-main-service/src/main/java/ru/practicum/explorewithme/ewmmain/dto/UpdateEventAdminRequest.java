@@ -3,6 +3,7 @@ package ru.practicum.explorewithme.ewmmain.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import ru.practicum.explorewithme.ewmmain.model.AdminAction;
 
 public class UpdateEventAdminRequest {
     @Size(min = 20, max = 2000)
@@ -17,7 +18,7 @@ public class UpdateEventAdminRequest {
     @Min(0)
     private Integer participantLimit;
     private Boolean requestModeration;
-    private String stateAction;
+    private AdminAction stateAction;
     @Size(min = 3, max = 120)
     private String title;
 
@@ -88,11 +89,11 @@ public class UpdateEventAdminRequest {
         this.requestModeration = requestModeration;
     }
 
-    public String getStateAction() {
+    public AdminAction getStateAction() {
         return stateAction;
     }
 
-    public void setStateAction(String stateAction) {
+    public void setStateAction(AdminAction stateAction) {
         this.stateAction = stateAction;
     }
 

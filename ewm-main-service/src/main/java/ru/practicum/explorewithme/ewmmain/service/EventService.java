@@ -15,12 +15,7 @@ import ru.practicum.explorewithme.ewmmain.exception.ConflictException;
 import ru.practicum.explorewithme.ewmmain.exception.NotFoundException;
 import ru.practicum.explorewithme.ewmmain.mapper.EventMapper;
 import ru.practicum.explorewithme.ewmmain.mapper.LocationMapper;
-import ru.practicum.explorewithme.ewmmain.model.Category;
-import ru.practicum.explorewithme.ewmmain.model.Event;
-import ru.practicum.explorewithme.ewmmain.model.EventState;
-import ru.practicum.explorewithme.ewmmain.model.Location;
-import ru.practicum.explorewithme.ewmmain.model.RequestStatus;
-import ru.practicum.explorewithme.ewmmain.model.User;
+import ru.practicum.explorewithme.ewmmain.model.*;
 import ru.practicum.explorewithme.ewmmain.repository.CategoryRepository;
 import ru.practicum.explorewithme.ewmmain.repository.EventRepository;
 import ru.practicum.explorewithme.ewmmain.repository.ParticipationRequestRepository;
@@ -29,8 +24,6 @@ import ru.practicum.explorewithme.ewmmain.dto.stats.ViewStats;
 import ru.practicum.explorewithme.ewmmain.util.EventValidator;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,8 +34,6 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class EventService {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
@@ -73,14 +64,14 @@ public class EventService {
                                                 int size) {
         eventValidator.validatePaging(from, size);
         List<EventState> stateFilters = parseStates(states);
-        LocalDateTime start = parseDate(rangeStart);
-        LocalDateTime end = parseDate(rangeEnd);
+        LocalDateTime start = eventValidator.parseDate(rangeStart);
+        LocalDateTime end = eventValidator.parseDate(rangeEnd);
         eventValidator.validateDateRange(start, end);
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
         List<Event> events = eventRepository.searchAdminEvents(
-                emptyToNull(users),
+                eventValidator.emptyToNull(users),
                 stateFilters,
-                emptyToNull(categories),
+                eventValidator.emptyToNull(categories),
                 start,
                 end,
                 pageable);
@@ -119,7 +110,7 @@ public class EventService {
             event.setTitle(request.getTitle());
         }
         if (request.getEventDate() != null) {
-            LocalDateTime eventDate = parseDate(request.getEventDate());
+            LocalDateTime eventDate = eventValidator.parseDate(request.getEventDate());
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
                 throw new IllegalArgumentException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
             }
@@ -129,19 +120,26 @@ public class EventService {
             event.setEventDate(eventDate);
         }
         if (request.getStateAction() != null) {
-            if ("PUBLISH_EVENT".equals(request.getStateAction())) {
-                if (event.getState() != EventState.PENDING) {
-                    throw new ConflictException(String.format("Cannot publish the event because it's not in the right state: %s", event.getState()));
+            switch (request.getStateAction()) {
+                case PUBLISH_EVENT -> {
+                    if (event.getState() != EventState.PENDING) {
+                        throw new ConflictException(String.format(
+                                "Cannot publish the event because it's not in the right state: %s",
+                                event.getState()
+                        ));
+                    }
+                    event.setState(EventState.PUBLISHED);
+                    event.setPublishedOn(LocalDateTime.now());
                 }
-                event.setState(EventState.PUBLISHED);
-                event.setPublishedOn(LocalDateTime.now());
-            } else if ("REJECT_EVENT".equals(request.getStateAction())) {
-                if (event.getState() == EventState.PUBLISHED) {
-                    throw new ConflictException("Cannot reject the event because it is already published");
+                case REJECT_EVENT -> {
+                    if (event.getState() == EventState.PUBLISHED) {
+                        throw new ConflictException("Cannot reject the event because it is already published");
+                    }
+                    event.setState(EventState.CANCELED);
                 }
-                event.setState(EventState.CANCELED);
-            } else {
-                throw new IllegalArgumentException("Unsupported stateAction: " + request.getStateAction());
+                default -> throw new IllegalArgumentException(
+                        "Unsupported stateAction: " + request.getStateAction()
+                );
             }
         }
         return toEventFullDto(eventRepository.save(event), getEventViews(event));
@@ -153,13 +151,13 @@ public class EventService {
                                                String rangeStart,
                                                String rangeEnd,
                                                Boolean onlyAvailable,
-                                               String sort,
+                                               EventSort sort,
                                                int from,
                                                int size) {
         eventValidator.validatePaging(from, size);
         eventValidator.validateSort(sort);
-        LocalDateTime start = parseDate(rangeStart);
-        LocalDateTime end = parseDate(rangeEnd);
+        LocalDateTime start = eventValidator.parseDate(rangeStart);
+        LocalDateTime end = eventValidator.parseDate(rangeEnd);
         eventValidator.validateDateRange(start, end);
         if (start == null && end == null) {
             start = LocalDateTime.now();
@@ -169,13 +167,13 @@ public class EventService {
         List<Event> events = eventRepository.searchPublicEvents(
                 EventState.PUBLISHED,
                 normalizedText,
-                emptyToNull(categories),
+                eventValidator.emptyToNull(categories),
                 paid,
                 start,
                 end,
                 pageable);
         List<EventShortDto> dtos = toShortDtos(events, onlyAvailable, sort, from, size);
-        if ("VIEWS".equals(sort)) {
+        if (sort == EventSort.VIEWS) {
             dtos.sort((a, b) -> Long.compare(b.getViews(), a.getViews()));
         }
         return dtos;
@@ -212,7 +210,7 @@ public class EventService {
 
     public EventFullDto createUserEvent(Long userId, NewEventDto request) {
         User user = findUser(userId);
-        LocalDateTime eventDate = parseDate(request.getEventDate());
+        LocalDateTime eventDate = eventValidator.parseDate(request.getEventDate());
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
             throw new IllegalArgumentException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
         }
@@ -267,7 +265,7 @@ public class EventService {
             event.setTitle(request.getTitle());
         }
         if (request.getEventDate() != null) {
-            LocalDateTime eventDate = parseDate(request.getEventDate());
+            LocalDateTime eventDate = eventValidator.parseDate(request.getEventDate());
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
                 throw new IllegalArgumentException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
             }
@@ -285,14 +283,17 @@ public class EventService {
         return toEventFullDto(eventRepository.save(event), getEventViews(event));
     }
 
-    private List<EventShortDto> toShortDtos(List<Event> events, Boolean onlyAvailable, String sort, int from, int size) {
+    private List<EventShortDto> toShortDtos(List<Event> events, Boolean onlyAvailable, EventSort sort, int from, int size) {
         Map<String, Long> stats = getEventViews(events);
         List<EventShortDto> dtos = events.stream()
                 .map(event -> toEventShortDto(event, stats.getOrDefault(getEventUri(event), 0L)))
                 .filter(eventShortDto -> !Boolean.TRUE.equals(onlyAvailable) || isAvailable(eventShortDto))
                 .collect(Collectors.toList());
-        if ("EVENT_DATE".equals(sort)) {
-            dtos.sort((a, b) -> a.getEventDate().compareTo(b.getEventDate()));
+        if (sort != null) {
+            switch (sort) {
+                case EVENT_DATE -> dtos.sort((a, b) -> a.getEventDate().compareTo(b.getEventDate()));
+                case VIEWS -> dtos.sort((a, b) -> Long.compare(b.getViews(), a.getViews()));
+            }
         }
         return dtos.stream()
                 .skip(from)
@@ -364,17 +365,6 @@ public class EventService {
         }
     }
 
-    private LocalDateTime parseDate(String dateTime) {
-        if (dateTime == null || dateTime.isBlank()) {
-            return null;
-        }
-        try {
-            return LocalDateTime.parse(dateTime, FORMATTER);
-        } catch (DateTimeParseException ex) {
-            throw new IllegalArgumentException("Invalid date-time format: " + dateTime);
-        }
-    }
-
     private List<EventState> parseStates(List<String> states) {
         if (states == null || states.isEmpty()) {
             return null;
@@ -388,9 +378,5 @@ public class EventService {
             }
         }
         return eventStates.isEmpty() ? null : eventStates;
-    }
-
-    private <T> List<T> emptyToNull(List<T> values) {
-        return values == null || values.isEmpty() ? null : values;
     }
 }

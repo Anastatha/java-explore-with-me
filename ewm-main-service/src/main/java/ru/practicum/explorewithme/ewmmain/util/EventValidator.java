@@ -1,10 +1,16 @@
 package ru.practicum.explorewithme.ewmmain.util;
 
 import org.springframework.stereotype.Component;
+import ru.practicum.explorewithme.ewmmain.model.EventSort;
+
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 
 @Component
 public class EventValidator {
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public void validatePaging(int from, int size) {
         if (from < 0) {
@@ -21,12 +27,24 @@ public class EventValidator {
         }
     }
 
-    public void validateSort(String sort) {
+    public void validateSort(EventSort sort) {
         if (sort == null) {
             return;
         }
-        if (!"EVENT_DATE".equals(sort) && !"VIEWS".equals(sort)) {
-            throw new IllegalArgumentException("Unsupported sort: " + sort);
+    }
+
+    public LocalDateTime parseDate(String dateTime) {
+        if (dateTime == null || dateTime.isBlank()) {
+            return null;
         }
+        try {
+            return LocalDateTime.parse(dateTime, FORMATTER);
+        } catch (DateTimeParseException ex) {
+            throw new IllegalArgumentException("Invalid date-time format: " + dateTime);
+        }
+    }
+
+    public <T> List<T> emptyToNull(List<T> values) {
+        return values == null || values.isEmpty() ? null : values;
     }
 }

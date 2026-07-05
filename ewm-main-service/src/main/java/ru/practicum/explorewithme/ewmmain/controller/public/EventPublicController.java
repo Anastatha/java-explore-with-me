@@ -10,6 +10,7 @@ import ru.practicum.explorewithme.ewmmain.client.StatsClient;
 import ru.practicum.explorewithme.ewmmain.dto.EventFullDto;
 import ru.practicum.explorewithme.ewmmain.dto.EventShortDto;
 import ru.practicum.explorewithme.ewmmain.dto.stats.EndpointHit;
+import ru.practicum.explorewithme.ewmmain.model.EventSort;
 import ru.practicum.explorewithme.ewmmain.service.EventService;
 
 import java.time.LocalDateTime;
@@ -33,7 +34,7 @@ public class EventPublicController {
                                          @RequestParam(value = "rangeStart", required = false) String rangeStart,
                                          @RequestParam(value = "rangeEnd", required = false) String rangeEnd,
                                          @RequestParam(value = "onlyAvailable", required = false, defaultValue = "false") Boolean onlyAvailable,
-                                         @RequestParam(value = "sort", required = false, defaultValue = "EVENT_DATE") String sort,
+                                         @RequestParam(value = "sort", required = false, defaultValue = "EVENT_DATE") EventSort sort,
                                          @RequestParam(value = "from", defaultValue = "0") int from,
                                          @RequestParam(value = "size", defaultValue = "10") int size,
                                          HttpServletRequest request) {
