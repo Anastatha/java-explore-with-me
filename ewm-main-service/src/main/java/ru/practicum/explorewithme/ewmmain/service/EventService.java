@@ -6,16 +6,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.explorewithme.ewmmain.client.StatsClient;
-import ru.practicum.explorewithme.ewmmain.dto.CategoryDto;
 import ru.practicum.explorewithme.ewmmain.dto.EventFullDto;
 import ru.practicum.explorewithme.ewmmain.dto.EventShortDto;
 import ru.practicum.explorewithme.ewmmain.dto.LocationDto;
 import ru.practicum.explorewithme.ewmmain.dto.NewEventDto;
 import ru.practicum.explorewithme.ewmmain.dto.UpdateEventAdminRequest;
 import ru.practicum.explorewithme.ewmmain.dto.UpdateEventUserRequest;
-import ru.practicum.explorewithme.ewmmain.dto.UserShortDto;
 import ru.practicum.explorewithme.ewmmain.exception.ConflictException;
 import ru.practicum.explorewithme.ewmmain.exception.NotFoundException;
+import ru.practicum.explorewithme.ewmmain.mapper.EventMapper;
+import ru.practicum.explorewithme.ewmmain.mapper.LocationMapper;
 import ru.practicum.explorewithme.ewmmain.model.Category;
 import ru.practicum.explorewithme.ewmmain.model.Event;
 import ru.practicum.explorewithme.ewmmain.model.EventState;
@@ -295,54 +295,15 @@ public class EventService {
     }
 
     private EventFullDto toEventFullDto(Event event, Long views) {
-        return new EventFullDto(
-                event.getId(),
-                event.getAnnotation(),
-                toCategoryDto(event.getCategory()),
-                getConfirmedRequests(event.getId()),
-                event.getCreatedOn().format(FORMATTER),
-                event.getDescription(),
-                event.getEventDate().format(FORMATTER),
-                toUserShortDto(event.getInitiator()),
-                toLocationDto(event.getLocation()),
-                event.getPaid(),
-                event.getParticipantLimit(),
-                event.getPublishedOn() != null ? event.getPublishedOn().format(FORMATTER) : null,
-                event.getRequestModeration(),
-                event.getState().name(),
-                event.getTitle(),
-                views
-        );
+        return EventMapper.toFullDto(event, getConfirmedRequests(event.getId()), views);
     }
 
     private EventShortDto toEventShortDto(Event event, Long views) {
-        return new EventShortDto(
-                event.getId(),
-                event.getAnnotation(),
-                toCategoryDto(event.getCategory()),
-                getConfirmedRequests(event.getId()),
-                event.getEventDate().format(FORMATTER),
-                toUserShortDto(event.getInitiator()),
-                event.getPaid(),
-                event.getTitle(),
-                views
-        );
-    }
-
-    private LocationDto toLocationDto(Location location) {
-        return location == null ? null : new LocationDto(location.getLat(), location.getLon());
-    }
-
-    private CategoryDto toCategoryDto(Category category) {
-        return new CategoryDto(category.getId(), category.getName());
-    }
-
-    private UserShortDto toUserShortDto(User user) {
-        return new UserShortDto(user.getId(), user.getName());
+        return EventMapper.toShortDto(event, getConfirmedRequests(event.getId()), views);
     }
 
     private Location toLocation(LocationDto dto) {
-        return dto == null ? null : new Location(dto.getLat(), dto.getLon());
+        return LocationMapper.toEntity(dto);
     }
 
     private Category findCategory(Long categoryId) {

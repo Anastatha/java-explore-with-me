@@ -10,6 +10,7 @@ import ru.practicum.explorewithme.ewmmain.repository.CategoryRepository;
 import org.springframework.data.domain.PageRequest;
 import java.util.List;
 import java.util.stream.Collectors;
+import ru.practicum.explorewithme.ewmmain.mapper.CategoryMapper;
 
 @Service
 @Transactional
@@ -22,8 +23,8 @@ public class CategoryService {
     }
 
     public CategoryDto addCategory(NewCategoryDto request) {
-        Category saved = repository.save(new Category(request.getName()));
-        return new CategoryDto(saved.getId(), saved.getName());
+        Category saved = repository.save(CategoryMapper.toEntity(request));
+        return CategoryMapper.toDto(saved);
     }
 
     public void deleteCategory(Long id) {
@@ -43,13 +44,13 @@ public class CategoryService {
     public List<CategoryDto> getCategories(int from, int size) {
         int page = from / Math.max(size, 1);
         return repository.findAll(PageRequest.of(page, size)).stream()
-                .map(c -> new CategoryDto(c.getId(), c.getName()))
+                .map(CategoryMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public CategoryDto getCategory(Long id) {
         Category category = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("Category with id=%d was not found", id)));
-        return new CategoryDto(category.getId(), category.getName());
+        return CategoryMapper.toDto(category);
     }
 }

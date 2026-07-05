@@ -7,7 +7,9 @@ import ru.practicum.explorewithme.ewmmain.dto.EventRequestStatusUpdateResult;
 import ru.practicum.explorewithme.ewmmain.dto.ParticipationRequestDto;
 import ru.practicum.explorewithme.ewmmain.exception.ConflictException;
 import ru.practicum.explorewithme.ewmmain.exception.NotFoundException;
+import ru.practicum.explorewithme.ewmmain.mapper.ParticipationRequestMapper;
 import ru.practicum.explorewithme.ewmmain.model.Event;
+import ru.practicum.explorewithme.ewmmain.model.EventState;
 import ru.practicum.explorewithme.ewmmain.model.ParticipationRequest;
 import ru.practicum.explorewithme.ewmmain.model.RequestStatus;
 import ru.practicum.explorewithme.ewmmain.model.User;
@@ -16,8 +18,6 @@ import ru.practicum.explorewithme.ewmmain.repository.ParticipationRequestReposit
 import ru.practicum.explorewithme.ewmmain.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import ru.practicum.explorewithme.ewmmain.model.EventState;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -149,12 +149,6 @@ public class ParticipationRequestService {
     }
 
     private ParticipationRequestDto toDto(ParticipationRequest request) {
-        return new ParticipationRequestDto(
-                request.getId(),
-                request.getCreated().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                request.getEvent().getId(),
-                request.getRequester().getId(),
-                request.getStatus().name()
-        );
+        return ParticipationRequestMapper.toDto(request);
     }
 }

@@ -13,10 +13,8 @@ import ru.practicum.explorewithme.ewmmain.repository.EventRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
-import ru.practicum.explorewithme.ewmmain.dto.EventShortDto;
-import ru.practicum.explorewithme.ewmmain.dto.CategoryDto;
-import ru.practicum.explorewithme.ewmmain.dto.UserShortDto;
 import org.springframework.data.domain.PageRequest;
+import ru.practicum.explorewithme.ewmmain.mapper.CompilationMapper;
 
 @Service
 public class CompilationService {
@@ -33,7 +31,7 @@ public class CompilationService {
         List<Compilation> comps = compilationRepository.findAll(PageRequest.of(page, size)).getContent();
         return comps.stream()
                 .filter(c -> pinned == null || Boolean.valueOf(pinned).equals(c.getPinned()))
-                .map(this::toDto)
+                .map(CompilationMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -75,19 +73,6 @@ public class CompilationService {
     }
 
     private CompilationDto toDto(Compilation compilation) {
-        List<EventShortDto> events = compilation.getEvents().stream()
-                .map(event -> new EventShortDto(
-                        event.getId(),
-                        event.getAnnotation(),
-                        new CategoryDto(event.getCategory().getId(), event.getCategory().getName()),
-                        0L,
-                        event.getEventDate().toString(),
-                        new UserShortDto(event.getInitiator().getId(), event.getInitiator().getName()),
-                        event.getPaid(),
-                        event.getTitle(),
-                        0L
-                ))
-                .collect(Collectors.toList());
-        return new CompilationDto(compilation.getId(), compilation.getTitle(), compilation.getPinned(), events);
+        return CompilationMapper.toDto(compilation);
     }
 }

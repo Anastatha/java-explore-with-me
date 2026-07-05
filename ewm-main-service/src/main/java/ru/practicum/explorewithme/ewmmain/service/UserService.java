@@ -5,6 +5,7 @@ import ru.practicum.explorewithme.ewmmain.dto.NewUserRequest;
 import ru.practicum.explorewithme.ewmmain.dto.UserDto;
 import ru.practicum.explorewithme.ewmmain.exception.ConflictException;
 import ru.practicum.explorewithme.ewmmain.exception.NotFoundException;
+import ru.practicum.explorewithme.ewmmain.mapper.UserMapper;
 import ru.practicum.explorewithme.ewmmain.model.User;
 import ru.practicum.explorewithme.ewmmain.repository.UserRepository;
 
@@ -47,6 +48,6 @@ public class UserService {
     }
 
     private UserDto toDto(User user) {
-        return new UserDto(user.getId(), user.getEmail(), user.getName());
+        return UserMapper.toDto(user);
     }
 }
