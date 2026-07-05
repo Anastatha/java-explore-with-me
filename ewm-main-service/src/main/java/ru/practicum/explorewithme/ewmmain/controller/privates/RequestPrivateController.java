@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.ewmmain.controller.privates;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.ewmmain.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.explorewithme.ewmmain.dto.EventRequestStatusUpdateResult;
@@ -17,6 +18,7 @@ public class RequestPrivateController {
     }
 
     @PostMapping("/users/{userId}/requests")
+    @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto addRequest(@PathVariable Long userId, @RequestParam Long eventId) {
         return requestService.addParticipationRequest(userId, eventId);
     }

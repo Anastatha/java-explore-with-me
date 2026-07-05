@@ -115,7 +115,7 @@ public class EventService {
         if (request.getEventDate() != null) {
             LocalDateTime eventDate = parseDate(request.getEventDate());
             if (event.getPublishedOn() != null && eventDate.isBefore(event.getPublishedOn().plusHours(1))) {
-                throw new ConflictException("The event date must be at least one hour after publication time");
+                throw new IllegalArgumentException("The event date must be at least one hour after publication time");
             }
             event.setEventDate(eventDate);
         }
@@ -201,7 +201,7 @@ public class EventService {
         User user = findUser(userId);
         LocalDateTime eventDate = parseDate(request.getEventDate());
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new ConflictException("Event date must be at least two hours in the future");
+            throw new IllegalArgumentException("Event date must be at least two hours in the future");
         }
         Event event = new Event();
         event.setAnnotation(request.getAnnotation());
@@ -256,7 +256,7 @@ public class EventService {
         if (request.getEventDate() != null) {
             LocalDateTime eventDate = parseDate(request.getEventDate());
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new ConflictException("Event date must be at least two hours in the future");
+                throw new IllegalArgumentException("Event date must be at least two hours in the future");
             }
             event.setEventDate(eventDate);
         }
@@ -333,7 +333,7 @@ public class EventService {
                 .collect(Collectors.toList());
         try {
             List<ViewStats> stats = statsClient.getStats(LocalDateTime.now().minusYears(5), LocalDateTime.now().plusYears(5), uris, false);
-            return stats.stream().collect(Collectors.toMap(ViewStats::getUri, ViewStats::getHits));
+            return stats.stream().collect(Collectors.toMap(ViewStats::getUri, ViewStats::getHits, Long::sum));
         } catch (RuntimeException ex) {
             return new HashMap<>();
         }

@@ -39,7 +39,7 @@ class RequestPrivateControllerTest {
         when(requestService.addParticipationRequest(eq(1L), eq(2L))).thenReturn(dto);
 
         mockMvc.perform(post("/users/1/requests").param("eventId", "2"))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1));
     }
 
