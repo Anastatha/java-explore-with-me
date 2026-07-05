@@ -38,14 +38,21 @@ public class EventPublicController {
                                          @RequestParam(value = "size", defaultValue = "10") int size,
                                          HttpServletRequest request) {
         List<EventShortDto> response = eventService.getPublicEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
-        statsClient.sendHit(new EndpointHit("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now()));
+        safeSendHit(request);
         return response;
     }
 
     @GetMapping("/{id}")
     public EventFullDto getEvent(@PathVariable Long id, HttpServletRequest request) {
         EventFullDto response = eventService.getPublicEvent(id);
-        statsClient.sendHit(new EndpointHit("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now()));
+        safeSendHit(request);
         return response;
+    }
+
+    private void safeSendHit(HttpServletRequest request) {
+        try {
+            statsClient.sendHit(new EndpointHit("ewm-main-service", request.getRequestURI(), request.getRemoteAddr(), LocalDateTime.now()));
+        } catch (RuntimeException ignored) {
+        }
     }
 }

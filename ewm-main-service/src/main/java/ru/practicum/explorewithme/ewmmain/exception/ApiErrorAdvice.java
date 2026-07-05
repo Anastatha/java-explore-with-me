@@ -5,9 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.explorewithme.ewmmain.exception.ConflictException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,6 +34,21 @@ public class ApiErrorAdvice {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, "Incorrectly made request.", ex.getMessage());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(ConflictException ex) {
+        return buildResponse(HttpStatus.CONFLICT, "Conflict occurred.", ex.getMessage());
+    }
+
+    @ExceptionHandler(DateTimeParseException.class)
+    public ResponseEntity<Map<String, Object>> handleDateTimeParse(DateTimeParseException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Incorrectly made request.", ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleInternalServerError(Exception ex) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error.", ex.getMessage());
     }
 
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String reason, String message) {
