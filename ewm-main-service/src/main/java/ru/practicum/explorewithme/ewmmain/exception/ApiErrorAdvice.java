@@ -52,12 +52,12 @@ public class ApiErrorAdvice {
 
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(ConflictException ex) {
-        return buildResponse(HttpStatus.CONFLICT, "Conflict occurred.", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "For the requested operation the conditions are not met.", ex.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex) {
-        return buildResponse(HttpStatus.CONFLICT, "Conflict occurred.", ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "Integrity constraint has been violated.", ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage());
     }
 
     @ExceptionHandler(DateTimeParseException.class)

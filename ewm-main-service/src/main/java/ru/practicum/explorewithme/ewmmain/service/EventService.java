@@ -1,7 +1,6 @@
 package ru.practicum.explorewithme.ewmmain.service;
 
 import jakarta.transaction.Transactional;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -73,14 +72,14 @@ public class EventService {
         LocalDateTime start = parseDate(rangeStart);
         LocalDateTime end = parseDate(rangeEnd);
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
-        Page<Event> page = eventRepository.findByAdminFilters(
+        List<Event> events = eventRepository.searchAdminEvents(
                 emptyToNull(users),
                 stateFilters,
                 emptyToNull(categories),
                 start,
                 end,
                 pageable);
-        return page.getContent().stream()
+        return events.stream()
                 .skip(from)
                 .limit(size)
                 .map(event -> toEventFullDto(event, 0L))
@@ -117,10 +116,10 @@ public class EventService {
         if (request.getEventDate() != null) {
             LocalDateTime eventDate = parseDate(request.getEventDate());
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new IllegalArgumentException("Event date must be at least two hours in the future");
+                throw new ConflictException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
             }
             if (event.getPublishedOn() != null && eventDate.isBefore(event.getPublishedOn().plusHours(1))) {
-                throw new IllegalArgumentException("The event date must be at least one hour after publication time");
+                throw new ConflictException("The event date must be at least one hour after publication time");
             }
             event.setEventDate(eventDate);
         }
@@ -161,7 +160,7 @@ public class EventService {
         }
         String normalizedText = (text == null || text.isBlank()) ? null : text;
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
-        Page<Event> page = eventRepository.findPublicEvents(
+        List<Event> events = eventRepository.searchPublicEvents(
                 EventState.PUBLISHED,
                 normalizedText,
                 emptyToNull(categories),
@@ -169,7 +168,6 @@ public class EventService {
                 start,
                 end,
                 pageable);
-        List<Event> events = page.getContent();
         List<EventShortDto> dtos = toShortDtos(events, onlyAvailable, sort, from, size);
         if ("VIEWS".equals(sort)) {
             dtos.sort((a, b) -> Long.compare(b.getViews(), a.getViews()));
@@ -190,8 +188,7 @@ public class EventService {
         validatePaging(from, size);
         User user = findUser(userId);
         Pageable pageable = PageRequest.of(0, Math.max(from + size, 1));
-        Page<Event> page = eventRepository.findByInitiatorId(user.getId(), pageable);
-        return page.getContent().stream()
+        return eventRepository.findByInitiatorId(user.getId(), pageable).stream()
                 .skip(from)
                 .limit(size)
                 .map(event -> toEventShortDto(event, 0L))
@@ -211,7 +208,7 @@ public class EventService {
         User user = findUser(userId);
         LocalDateTime eventDate = parseDate(request.getEventDate());
         if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new IllegalArgumentException("Event date must be at least two hours in the future");
+            throw new ConflictException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
         }
         Event event = new Event();
         event.setAnnotation(request.getAnnotation());
@@ -266,7 +263,7 @@ public class EventService {
         if (request.getEventDate() != null) {
             LocalDateTime eventDate = parseDate(request.getEventDate());
             if (eventDate.isBefore(LocalDateTime.now().plusHours(2))) {
-                throw new IllegalArgumentException("Event date must be at least two hours in the future");
+                throw new ConflictException("Field: eventDate. Error: должно содержать дату, которая еще не наступила. Value: " + request.getEventDate());
             }
             event.setEventDate(eventDate);
         }
