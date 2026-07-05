@@ -1,7 +1,11 @@
 package ru.practicum.explorewithme.ewmmain.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public class LocationDto {
+    @NotNull
     private Float lat;
+    @NotNull
     private Float lon;
 
     public LocationDto() {

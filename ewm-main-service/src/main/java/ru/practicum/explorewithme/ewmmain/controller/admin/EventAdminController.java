@@ -1,5 +1,6 @@
 package ru.practicum.explorewithme.ewmmain.controller.admin;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.explorewithme.ewmmain.dto.EventFullDto;
 import ru.practicum.explorewithme.ewmmain.dto.UpdateEventAdminRequest;
@@ -28,7 +29,7 @@ public class EventAdminController {
     }
 
     @PatchMapping("/{eventId}")
-    public EventFullDto updateEvent(@PathVariable Long eventId, @RequestBody UpdateEventAdminRequest request) {
+    public EventFullDto updateEvent(@PathVariable Long eventId, @Validated @RequestBody UpdateEventAdminRequest request) {
         return eventService.updateEventAdmin(eventId, request);
     }
 }

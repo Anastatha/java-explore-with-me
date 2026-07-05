@@ -1,9 +1,13 @@
 package ru.practicum.explorewithme.ewmmain.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 
 public class EventRequestStatusUpdateRequest {
+    @NotEmpty
     private List<Long> requestIds;
+    @NotBlank
     private String status;
 
     public EventRequestStatusUpdateRequest() {
