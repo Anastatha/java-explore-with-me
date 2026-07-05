@@ -11,7 +11,6 @@ import java.util.List;
 
 @Service
 public class StatsService {
-
     private final EndpointHitRepository repository;
 
     public StatsService(EndpointHitRepository repository) {
@@ -29,9 +28,8 @@ public class StatsService {
     }
 
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        if (unique) {
-            return repository.findStatsUnique(start, end, uris);
-        }
-        return repository.findStats(start, end, uris);
+        return unique
+                ? repository.findStatsUnique(start, end, uris)
+                : repository.findStats(start, end, uris);
     }
 }

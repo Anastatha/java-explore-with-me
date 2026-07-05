@@ -1,6 +1,8 @@
 package ru.practicum.explorewithme.ewmmain.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import ru.practicum.explorewithme.ewmmain.dto.stats.EndpointHit;
 import ru.practicum.explorewithme.ewmmain.dto.stats.ViewStats;
 
@@ -13,16 +15,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 public class StatsClient {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final ConcurrentLinkedQueue<EndpointHit> LOCAL_HITS = new ConcurrentLinkedQueue<>();
     private final HttpClient client;
     private final ObjectMapper objectMapper;
     private final String baseUrl;
@@ -30,11 +27,12 @@ public class StatsClient {
     public StatsClient(String baseUrl) {
         this.client = HttpClient.newHttpClient();
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         this.baseUrl = baseUrl;
     }
 
     public void sendHit(EndpointHit hit) {
-        LOCAL_HITS.add(hit);
         try {
             String body = objectMapper.writeValueAsString(hit);
             HttpRequest request = HttpRequest.newBuilder()
@@ -63,57 +61,16 @@ public class StatsClient {
                     .GET()
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            List<ViewStats> remoteStats = Arrays.asList(objectMapper.readValue(response.body(), ViewStats[].class));
-            if (!remoteStats.isEmpty()) {
-                return remoteStats;
-            }
-            List<ViewStats> localStats = getLocalStats(start, end, uris, unique);
-            return localStats.isEmpty() ? remoteStats : localStats;
+            return Arrays.asList(objectMapper.readValue(response.body(), ViewStats[].class));
         } catch (IOException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            return getLocalStats(start, end, uris, unique);
+            return List.of();
         }
     }
 
     private String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
-
-    private List<ViewStats> getLocalStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
-        List<EndpointHit> hits = new ArrayList<>();
-        for (EndpointHit hit : LOCAL_HITS) {
-            if (hit.getTimestamp() == null || hit.getUri() == null) {
-                continue;
-            }
-            if (hit.getTimestamp().isBefore(start) || hit.getTimestamp().isAfter(end)) {
-                continue;
-            }
-            if (uris != null && !uris.contains(hit.getUri())) {
-                continue;
-            }
-            hits.add(hit);
-        }
-
-        Map<String, List<EndpointHit>> grouped = hits.stream()
-                .collect(Collectors.groupingBy(hit -> hit.getApp() + "|" + hit.getUri()));
-
-        return grouped.entrySet().stream()
-                .map(entry -> {
-                    String[] parts = entry.getKey().split("\\|", 2);
-                    String app = parts.length > 0 ? parts[0] : null;
-                    String uri = parts.length > 1 ? parts[1] : null;
-                    long count = unique
-                            ? entry.getValue().stream()
-                                    .map(EndpointHit::getIp)
-                                    .filter(ip -> ip != null && !ip.isBlank())
-                                    .collect(Collectors.toSet())
-                                    .size()
-                            : entry.getValue().size();
-                    return new ViewStats(app, uri, count);
-                })
-                .sorted((left, right) -> Long.compare(right.getHits(), left.getHits()))
-                .collect(Collectors.toList());
     }
 }
