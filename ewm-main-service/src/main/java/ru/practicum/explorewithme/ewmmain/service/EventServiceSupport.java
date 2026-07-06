@@ -201,10 +201,6 @@ public class EventServiceSupport {
         return EventMapper.toFullDto(event, confirmedRequests, views);
     }
 
-    public EventShortDto toEventShortDto(Event event, Long views) {
-        return toEventShortDto(event, getConfirmedRequests(event.getId()), views);
-    }
-
     public EventShortDto toEventShortDto(Event event, long confirmedRequests, Long views) {
         return EventMapper.toShortDto(event, confirmedRequests, views);
     }
