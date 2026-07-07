@@ -1,5 +1,7 @@
 package ru.practicum.explorewithme.ewmmain.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.explorewithme.ewmmain.dto.CompilationDto;
 import ru.practicum.explorewithme.ewmmain.dto.NewCompilationDto;
@@ -29,9 +31,13 @@ public class CompilationService {
 
     public List<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
         int page = from / Math.max(size, 1);
-        List<Compilation> comps = compilationRepository.findAll(PageRequest.of(page, size)).getContent();
-        return comps.stream()
-                .filter(c -> pinned == null || Boolean.valueOf(pinned).equals(c.getPinned()))
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Compilation> compilations = pinned == null
+                ? compilationRepository.findAll(pageable)
+                : compilationRepository.findByPinned(pinned, pageable);
+
+        return compilations.getContent().stream()
                 .map(CompilationMapper::toDto)
                 .collect(Collectors.toList());
     }
