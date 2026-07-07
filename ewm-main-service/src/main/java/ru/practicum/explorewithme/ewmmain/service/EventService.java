@@ -1,6 +1,6 @@
 package ru.practicum.explorewithme.ewmmain.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class EventService {
     private final EventRepository eventRepository;
     private final EventValidator eventValidator;
@@ -38,6 +37,7 @@ public class EventService {
         this.support = support;
     }
 
+    @Transactional(readOnly = true)
     public List<EventFullDto> getEventsForAdmin(List<Long> users,
                                                 List<String> states,
                                                 List<Long> categories,
@@ -66,12 +66,14 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public EventFullDto updateEventAdmin(Long eventId, UpdateEventAdminRequest request) {
         Event event = support.getEventOrThrow(eventId);
         support.applyAdminUpdate(event, request);
         return support.toEventFullDto(eventRepository.save(event), support.getEventViews(event));
     }
 
+    @Transactional(readOnly = true)
     public List<EventShortDto> getPublicEvents(String text,
                                                List<Long> categories,
                                                Boolean paid,
@@ -106,6 +108,7 @@ public class EventService {
         return dtos;
     }
 
+    @Transactional(readOnly = true)
     public EventFullDto getPublicEvent(Long eventId) {
         Event event = support.getEventOrThrow(eventId);
         if (event.getState() != EventState.PUBLISHED) {
@@ -114,6 +117,7 @@ public class EventService {
         return support.toEventFullDto(event, support.getEventViews(event));
     }
 
+    @Transactional(readOnly = true)
     public List<EventShortDto> getUserEvents(Long userId, int from, int size) {
         eventValidator.validatePaging(from, size);
         User user = support.findUser(userId);
@@ -127,6 +131,7 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public EventFullDto getUserEvent(Long userId, Long eventId) {
         Event event = support.getEventOrThrow(eventId);
         if (!Objects.equals(event.getInitiator().getId(), userId)) {
@@ -135,12 +140,14 @@ public class EventService {
         return support.toEventFullDto(event, support.getEventViews(event));
     }
 
+    @Transactional
     public EventFullDto createUserEvent(Long userId, NewEventDto request) {
         User user = support.findUser(userId);
         Event created = eventRepository.save(support.createEvent(user, request));
         return support.toEventFullDto(created, 0L);
     }
 
+    @Transactional
     public EventFullDto updateUserEvent(Long userId, Long eventId, UpdateEventUserRequest request) {
         Event event = support.getEventOrThrow(eventId);
         if (!Objects.equals(event.getInitiator().getId(), userId)) {
