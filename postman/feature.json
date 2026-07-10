@@ -140,11 +140,11 @@
               "pm.test(\"Status code is 201\", function () {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "const dataTest = pm.response.json();",
               "pm.test(\"Event id is set\", function () {",
-              "    pm.expect(data.id).to.be.a('number');",
+              "    pm.expect(dataTest.id).to.be.a('number');",
               "});",
-              "pm.collectionVariables.set('eventId', data.id);"
+              "pm.collectionVariables.set('eventId', dataTest.id);"
             ]
           }
         }
