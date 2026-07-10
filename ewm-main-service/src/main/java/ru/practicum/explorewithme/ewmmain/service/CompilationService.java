@@ -43,6 +43,7 @@ public class CompilationService {
     }
 
     public CompilationDto getCompilation(Long compId) {
+        
         Compilation compilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> new NotFoundException(String.format("Compilation with id=%d was not found", compId)));
         return CompilationMapper.toDto(compilation);
