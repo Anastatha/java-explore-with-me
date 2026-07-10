@@ -1,0 +1,359 @@
+{
+  "info": {
+    "name": "Comments Feature",
+    "description": "Postman collection for comments feature with full setup and validation.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "eventId",
+      "value": ""
+    },
+    {
+      "key": "commentId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Create User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "users"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"test-user-{{timestamp}}@example.com\",\n  \"name\": \"Postman User\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('timestamp')) {",
+              "    pm.collectionVariables.set('timestamp', Date.now());",
+              "}",
+              "const timestamp = pm.collectionVariables.get('timestamp');",
+              "pm.request.body.raw = pm.request.body.raw.replace(/{{timestamp}}/g, timestamp);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test(\"User id is set\", function () {",
+              "    pm.expect(data.id).to.be.a('number');",
+              "});",
+              "pm.collectionVariables.set('userId', data.id);"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Create Category",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/admin/categories",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "categories"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Postman Category {{timestamp}}\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const timestamp = pm.collectionVariables.get('timestamp') || Date.now();",
+              "pm.collectionVariables.set('timestamp', timestamp);",
+              "pm.request.body.raw = pm.request.body.raw.replace(/{{timestamp}}/g, timestamp);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test(\"Category id is set\", function () {",
+              "    pm.expect(data.id).to.be.a('number');",
+              "});",
+              "pm.collectionVariables.set('categoryId', data.id);"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Create Event",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/events",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "events"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"annotation\": \"Postman event annotation with enough length for validation.\",\n  \"category\": {{categoryId}},\n  \"description\": \"Postman event description with enough length for validation.\",\n  \"eventDate\": \"2027-01-01 10:00:00\",\n  \"location\": {\n    \"lat\": 10.0,\n    \"lon\": 20.0\n  },\n  \"paid\": false,\n  \"participantLimit\": 10,\n  \"requestModeration\": true,\n  \"title\": \"Postman Event Title\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test(\"Event id is set\", function () {",
+              "    pm.expect(data.id).to.be.a('number');",
+              "});",
+              "pm.collectionVariables.set('eventId', data.id);"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Create Comment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/events/{{eventId}}/comments",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "events", "{{eventId}}", "comments"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"This event looks great!\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test(\"Comment id is returned\", function () {",
+              "    pm.expect(data.id).to.be.a('number');",
+              "});",
+              "pm.test(\"Comment status is PENDING\", function () {",
+              "    pm.expect(data.status).to.eql('PENDING');",
+              "});",
+              "pm.collectionVariables.set('commentId', data.id);"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Edit Comment",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/comments/{{commentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "comments", "{{commentId}}"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"Updated comment text\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('commentId')) {",
+              "    throw new Error('commentId is not set');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test(\"Updated text is returned\", function () {",
+              "    pm.expect(data.text).to.eql('Updated comment text');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "Approve Comment",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/admin/comments/{{commentId}}?action=approve",
+          "host": ["{{baseUrl}}"],
+          "path": ["admin", "comments", "{{commentId}}"],
+          "query": [
+            {
+              "key": "action",
+              "value": "approve"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('commentId')) {",
+              "    throw new Error('commentId is not set');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test(\"Comment is approved\", function () {",
+              "    pm.expect(data.status).to.eql('APPROVED');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "response": []
+    },
+    {
+      "name": "List Event Comments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/events/{{eventId}}/comments",
+          "host": ["{{baseUrl}}"],
+          "path": ["events", "{{eventId}}", "comments"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('eventId')) {",
+              "    throw new Error('eventId is not set');",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const data = pm.response.json();",
+              "pm.test(\"Response is an array\", function () {",
+              "    pm.expect(data).to.be.an('array');",
+              "});",
+              "pm.test(\"All returned comments are approved\", function () {",
+              "    pm.expect(data.every(comment => comment.status === 'APPROVED')).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "response": []
+    }
+  ]
+}
