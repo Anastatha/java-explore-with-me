@@ -13,30 +13,34 @@
         {
           "listen": "prerequest",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "if (!pm.collectionVariables.get('timestamp')) {",
               "    pm.collectionVariables.set('timestamp', Date.now());",
               "}",
               "const timestamp = pm.collectionVariables.get('timestamp');",
               "pm.request.body.raw = pm.request.body.raw.replace(/{{timestamp}}/g, timestamp);"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         },
         {
           "listen": "test",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 201\", function () {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "const data1 = pm.response.json();",
               "pm.test(\"User id is set\", function () {",
-              "    pm.expect(data.id).to.be.a('number');",
+              "    pm.expect(data1.id).to.be.a('number');",
               "});",
-              "pm.collectionVariables.set('userId', data.id);"
-            ]
+              "pm.collectionVariables.set('userId', data1.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -71,28 +75,32 @@
         {
           "listen": "prerequest",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "const timestamp = pm.collectionVariables.get('timestamp') || Date.now();",
               "pm.collectionVariables.set('timestamp', timestamp);",
               "pm.request.body.raw = pm.request.body.raw.replace(/{{timestamp}}/g, timestamp);"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         },
         {
           "listen": "test",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 201\", function () {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "const data2 = pm.response.json();",
               "pm.test(\"Category id is set\", function () {",
-              "    pm.expect(data.id).to.be.a('number');",
+              "    pm.expect(data2.id).to.be.a('number');",
               "});",
-              "pm.collectionVariables.set('categoryId', data.id);"
-            ]
+              "pm.collectionVariables.set('categoryId', data2.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -173,20 +181,22 @@
         {
           "listen": "test",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 201\", function () {",
               "    pm.response.to.have.status(201);",
               "});",
-              "const data = pm.response.json();",
+              "const data4 = pm.response.json();",
               "pm.test(\"Comment id is returned\", function () {",
-              "    pm.expect(data.id).to.be.a('number');",
+              "    pm.expect(data4.id).to.be.a('number');",
               "});",
               "pm.test(\"Comment status is PENDING\", function () {",
-              "    pm.expect(data.status).to.eql('PENDING');",
+              "    pm.expect(data4.status).to.eql('PENDING');",
               "});",
-              "pm.collectionVariables.set('commentId', data.id);"
-            ]
+              "pm.collectionVariables.set('commentId', data4.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -224,27 +234,31 @@
         {
           "listen": "prerequest",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "if (!pm.collectionVariables.get('commentId')) {",
               "    throw new Error('commentId is not set');",
               "}"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         },
         {
           "listen": "test",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "const data5 = pm.response.json();",
               "pm.test(\"Updated text is returned\", function () {",
-              "    pm.expect(data.text).to.eql('Updated comment text');",
+              "    pm.expect(data5.text).to.eql('Updated comment text');",
               "});"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -281,27 +295,31 @@
         {
           "listen": "prerequest",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "if (!pm.collectionVariables.get('commentId')) {",
               "    throw new Error('commentId is not set');",
               "}"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         },
         {
           "listen": "test",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "const data6 = pm.response.json();",
               "pm.test(\"Comment is approved\", function () {",
-              "    pm.expect(data.status).to.eql('APPROVED');",
+              "    pm.expect(data6.status).to.eql('APPROVED');",
               "});"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
@@ -334,30 +352,34 @@
         {
           "listen": "prerequest",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "if (!pm.collectionVariables.get('eventId')) {",
               "    throw new Error('eventId is not set');",
               "}"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         },
         {
           "listen": "test",
           "script": {
-            "type": "text/javascript",
             "exec": [
               "pm.test(\"Status code is 200\", function () {",
               "    pm.response.to.have.status(200);",
               "});",
-              "const data = pm.response.json();",
+              "const data7 = pm.response.json();",
               "pm.test(\"Response is an array\", function () {",
-              "    pm.expect(data).to.be.an('array');",
+              "    pm.expect(data7).to.be.an('array');",
               "});",
               "pm.test(\"All returned comments are approved\", function () {",
-              "    pm.expect(data.every(comment => comment.status === 'APPROVED')).to.be.true;",
+              "    pm.expect(data7.every(comment => comment.status === 'APPROVED')).to.be.true;",
               "});"
-            ]
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
           }
         }
       ],
